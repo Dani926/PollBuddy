@@ -8,12 +8,26 @@ var path = require("path");
 var mongoConnection = require("../modules/mongoConnection.js");
 const rpi = require("../modules/rpi");
 
-// GET users listing.
+/*
+@Route: /api/users/
+@Description: Gets a list of users
+@Body: None
+@Params: None
+@Returns: Array of user objects
+*/
 router.get("/", function (req, res, next) {
   mongoConnection.getDB().collection("users").find({}).toArray(function (err, result) {
     res.send(result);
   });
 });
+
+/*
+@Route: /api/users/login
+@Description: Sends a login request
+@Body: {email, password}
+@Params: None
+@Returns: 200 status on success, 401 for invalid credentials
+*/
 router.post("/login", function (req, res) {
 
   // Get email and password from request in JSON form
@@ -82,6 +96,14 @@ router.post("/login", function (req, res) {
 
 });
 
+/*
+@Route: /api/users/login/rpi
+@Description: Tries to log in user through CAS
+@Body: None
+@Params: None
+@Returns: sends "User not registered" message if unsuccessful,
+else returns redirection page.
+*/
 router.get("/login/rpi", rpi.bounce2, function (req, res, next) {
 
   // This runs if the user is logged in successfully, the user is first bounced to the RPI CAS login and only after
@@ -128,7 +150,15 @@ router.get("/login/rpi", rpi.bounce2, function (req, res, next) {
 
 });
 
-
+/*
+@Route: /api/users/register
+@Description: Registers a new user
+@Body: {
+  FirstName, LastName, Username, Email, Password
+}
+@Params: None
+@Returns: "Exists" if user already exists in database, else status 200.
+*/
 router.post("/register", function (req, res, next) {
   var requestBody = req.body;
 
@@ -147,11 +177,37 @@ router.post("/register", function (req, res, next) {
   });
 });
 
-// stored user session data
+/*
+@Route: /api/users/session
+@Description: Gets a user's session data
+@Body: None
+@Params: None
+@Returns: Json object {
+  loggedIn: Bool, 
+  username: String, 
+  firstName: String, 
+  lastName: String,
+  sessionID: String
+}
+*/
 router.get("/session", function (req, res, next) {
   res.send(req.session.userData || {});
 });
 
+/*
+@Route: /api/users/:id/edit
+@Description: Modify an existing user
+@Body: {
+  Action: "Add" || "Remove",
+  FirstName: String,
+  LastName: String,
+  Username: String,
+  Email: String,
+  Password: String
+}
+@Params: id: user id
+@Returns: status 200 if successful
+*/
 router.post("/:id/edit", function (req, res) {//TODO RCS BOOL refer to documentation
   var id = new mongoConnection.getMongo().ObjectID(req.params.id);
   var jsonContent = req.body;
@@ -260,6 +316,13 @@ router.post("/:id/edit", function (req, res) {//TODO RCS BOOL refer to documenta
   return res.sendStatus(200); // TODO: Ensure this is true
 });
 
+/*
+@Route: /api/users/:id
+@Description: Gets a user by id
+@Body: None
+@Params: id: user id
+@Returns: User object on success, status 500 otherwise
+*/
 router.get("/:id", function (req, res, next) {
   var id = new mongoConnection.getMongo().ObjectID(req.params.id);
   mongoConnection.getDB().collection("users").find({ "_id": id }).toArray(function (err, result) {
@@ -270,6 +333,13 @@ router.get("/:id", function (req, res, next) {
   });
 });
 
+/*
+@Route: /api/users/:id/groups
+@Description: Gets a user's groups
+@Body: None
+@Params: None
+@Returns: Json Object of groups
+*/
 router.get("/:id/groups", function (req, res, next) {
   var id = new mongoConnection.getMongo().ObjectID(req.params.id);
   mongoConnection.getDB().collection("users").find({ "_id": id }, { projection: { _id: 0, Groups: 1 } }).map(function (item) {
