@@ -120,11 +120,11 @@ button:focus {
   box-sizing: border-box;
 }
 
-input.textBox:focus, textarea.textBox:focus {
+input.textBox:not(:read-only):focus, textarea.textBox:focus {
   border-color: var(--base-purple-logo-bg);
 }
 
-input.textBox:focus::placeholder, textarea.textBox:focus::placeholder {
+input.textBox:not(:read-only):focus::placeholder, textarea.textBox:focus::placeholder {
   opacity: 0;
 }
 
@@ -308,4 +308,11 @@ a:hover {
 ::selection {
   color: var(--darkest-purple-header-color);
   background: var(--light-purple-logo-text);
+}
+
+.textBox:read-only {
+  cursor: not-allowed;
+  border-color: var(--gray-placeholder-text);
+  color: var(--gray-placeholder-text);
+  background: var(--light-gray);
 }
